@@ -23,13 +23,6 @@
     
       
       ////////////////////////////
-      //   misc                 //
-      ////////////////////////////
-      void snapshot(const string & type, int64_t param ) const;
-
-
-
-      ////////////////////////////
       //   vestin               //
       ////////////////////////////
       /**
@@ -42,7 +35,7 @@
 
 #ifndef CYBEX_WALLET_API
 
-#define CYBEX_WALLET_API (list_balances)(cancel_vesting)(get_crowdfunds)(get_crowdfund_contracts)(list_crowdfunds)(initiate_crowdfund)(participate_crowdfund)(withdraw_crowdfund)(snapshot)
+#define CYBEX_WALLET_API (list_balances)(cancel_vesting)(get_crowdfunds)(get_crowdfund_contracts)(list_crowdfunds)(initiate_crowdfund)(participate_crowdfund)(withdraw_crowdfund)
 
 #endif
 

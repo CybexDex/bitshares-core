@@ -101,7 +101,6 @@ add_library( graphene_chain
              cybex/vesting_ops.cpp
              cybex/vesting_evaluator.cpp
              cybex/block_callback.cpp
-             cybex/snapshot.cpp
              cybex/extension_check.cpp
              cybex/crowdfund_object.cpp
              cybex/crowdfund_ops.cpp

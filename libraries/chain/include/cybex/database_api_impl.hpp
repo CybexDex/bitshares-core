@@ -1,20 +1,3 @@
-void database_api_impl::snapshot(const string & type, int64_t param )const
-{
-
-    if(type=="block")
-    {
-        graphene::chain::block_callback::snapshot_at_block_num=param;
-    }
-    else if(type=="day")
-    {
-        graphene::chain::block_callback::snapshot_in_day=param;
-    }
-    else if(type=="time")
-    {
-         graphene::chain::block_callback::snapshot_in_hour = ((uint16_t)param)/100;
-         graphene::chain::block_callback::snapshot_in_minute = ((uint16_t)param)%100;
-    } 
-}
 vector<crowdfund_contract_object> database_api_impl::get_crowdfund_contract_objects( const account_id_type id )const
 {
    try
@@ -78,10 +61,6 @@ vector<crowdfund_object> database_api_impl::list_crowdfund_objects( const crowdf
       return result;
    }
    FC_CAPTURE_AND_RETHROW( (id) )
-}
-void  database_api::snapshot( const string & type, int64_t param )const
-{
-   my->snapshot(type,param);
 }
 vector<crowdfund_contract_object> database_api::get_crowdfund_contract_objects( const account_id_type id )const
 {

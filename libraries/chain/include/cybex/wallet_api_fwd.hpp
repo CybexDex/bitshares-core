@@ -26,11 +26,6 @@ signed_transaction  wallet_api::cancel_vesting(string name_or_id, string id, boo
 {
    return my->cancel_vesting( name_or_id, id, broadcast );
 }
-
-void wallet_api::snapshot(const std::string&type, int64_t param) const
-{
-     my->snapshot(type,param);
-}
 vector< balance_object > wallet_api::list_balances( string name_or_id)
 {
    return my->list_balances( name_or_id);

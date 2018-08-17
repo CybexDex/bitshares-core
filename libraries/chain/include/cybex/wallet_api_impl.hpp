@@ -1,9 +1,3 @@
-void wallet_api_impl::snapshot(const std::string&type, int64_t param) const
-{ try{
-
-      _remote_db->snapshot(type,param);
-
-} FC_CAPTURE_AND_RETHROW( (type) ) }
 vector< crowdfund_object > wallet_api_impl::get_crowdfunds( string name_or_id)
 { try {
    FC_ASSERT(!is_locked());
