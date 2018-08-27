@@ -27,6 +27,7 @@
 #include <graphene/debug_witness/debug_witness.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
 #include <graphene/elasticsearch/elasticsearch_plugin.hpp>
+#include <graphene/mongodb/mongodb_plugin.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
 #include <graphene/snapshot/snapshot.hpp>
@@ -197,6 +198,7 @@ int main(int argc, char** argv) {
       auto debug_witness_plug = node->register_plugin<debug_witness_plugin::debug_witness_plugin>();
       auto history_plug = node->register_plugin<account_history::account_history_plugin>();
       auto elasticsearch_plug = node->register_plugin<elasticsearch::elasticsearch_plugin>();
+      auto mongodb_plug = node->register_plugin<mongodb::mongodb_plugin>();
       auto market_history_plug = node->register_plugin<market_history::market_history_plugin>();
       auto delayed_plug = node->register_plugin<delayed_node::delayed_node_plugin>();
       auto snapshot_plug = node->register_plugin<snapshot_plugin::snapshot_plugin>();
