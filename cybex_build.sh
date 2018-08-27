@@ -19,6 +19,12 @@ else
    install_tag=
 fi
 
+opt=""
+
+if [ $# -gt 0 ] && [ "$1" == "dbg" ];
+then
+    opt="$opt -DCMAKE_BUILD_TYPE=Debug"
+fi
 
 VERSION=1.2
 ULIMIT=$( ulimit -u )
@@ -32,16 +38,18 @@ then
     mkdir -p ${BUILD_DIR}
 fi
 
+
+
 cd ${BUILD_DIR}
 
 
 
 if [ "${ARCH}" == "Darwin" ];
     then
-        cmake -G"Unix Makefiles"  -DCMAKE_INSTALL_PREFIX="$PWD/install${install_tag}" -DGRAPHENE_EGENESIS_JSON=genesis.json -DOPENSSL_ROOT_DIR=/usr/local/Cellar/openssl/1.0.2o_1  -DBOOST_ROOT=/usr/local/Cellar/boost@1.57/1.57.0/ .. -B.
+        cmake -G"Unix Makefiles" ${opt}  -DCMAKE_INSTALL_PREFIX="$PWD/install${install_tag}" -DGRAPHENE_EGENESIS_JSON=genesis.json -DOPENSSL_ROOT_DIR=/usr/local/Cellar/openssl/1.0.2o_1  -DBOOST_ROOT=/usr/local/Cellar/boost@1.57/1.57.0/ .. -B.
         N_CPU=$(sysctl -i machdep.cpu.thread_count | awk '{print $2}')
     else
-        cmake -G"Unix Makefiles"  -DCMAKE_INSTALL_PREFIX="$PWD/install${install_tag}" -DGRAPHENE_EGENESIS_JSON=genesis.json .. -B.
+        cmake -G"Unix Makefiles" ${opt}  -DCMAKE_INSTALL_PREFIX="$PWD/install${install_tag}" -DGRAPHENE_EGENESIS_JSON=genesis.json .. -B.
         N_CPU=$(cat /proc/cpuinfo | grep -c  '^processor')
 
 fi
