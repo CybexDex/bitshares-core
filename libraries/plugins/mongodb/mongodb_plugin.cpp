@@ -38,6 +38,7 @@
 #include <fc/thread/thread.hpp>
 #include <fc/io/json.hpp>
 #include <fc/utf8.hpp>
+#include <fc/static_variant.hpp>
 #include <fc/variant.hpp>
 
 #include <boost/chrono.hpp>
@@ -225,7 +226,7 @@ void mongodb_plugin_impl::clear_database_since(uint32_t clear_num) {
    // // auto json_str = "{\"block_data.block_num\" : " + clear_num_str + "} ";
    // ilog(json_str);
    // const auto& value = bsoncxx::from_json( json_str );
-   auto query_value = document{} << "block_data.block_num" << open_document << "$gte" << b_int64{clear_num} << close_document << finalize;
+   auto query_value = document{} << "bulk.block_data.block_num" << open_document << "$gte" << b_int64{clear_num} << close_document << finalize;
    try{
       // auto col_doc = bsoncxx::builder::basic::document{};
       // col_doc.append( bsoncxx::builder::concatenate_doc{value.view()} );
@@ -256,10 +257,24 @@ void mongodb_plugin_impl::init() {
       // blocks indexes
       auto account_history = mongo_conn[db_name]["account_history"]; // Blocks
       // account_history.create_index( bsoncxx::from_json( R"xxx({ "account_history.id" : 1 })xxx" ));
-      account_history.create_index( bsoncxx::from_json( R"xxx({ "account_history.account" : 1 })xxx" ));
-      account_history.create_index( bsoncxx::from_json( R"xxx({ "block_data.block_num" : 1 })xxx" ));
-      // account_history.create_index( bsoncxx::from_json( R"xxx({ "block_id" : 1 })xxx" ));
-
+      if(wipe_database_on_startup == true){
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_num" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.operation_id" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.trx_id" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.operation_type" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_num": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.operation_type": 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fee.asset_id" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.amount.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.amount_to_sell.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.min_to_receive.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.pays.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.receives.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" ));
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "block_id" : 1 })xxx" ));
+      }
    } catch(...) {
       handle_mongo_exception("create indexes", __LINE__);
    }
@@ -436,10 +451,10 @@ void mongodb_plugin_impl::processBulkLine(account_transaction_history_object ath
 {
    bulk_struct bulks;
    bulks.account_history = ath;
-   bulks.operation_history = os;
+   // bulks.operation_history = os;
    bulks.operation_type = op_type;
    bulks.block_data = bs;
-   bulks.additional_data = vs;
+   // bulks.additional_data = vs;
 
    std::string alltogether = fc::json::to_string(bulks);
 
@@ -457,15 +472,21 @@ void mongodb_plugin_impl::processBulkLine(account_transaction_history_object ath
 
    auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
          std::chrono::microseconds{fc::time_point::now().time_since_epoch().count()});
-
+   // const auto& opvalue = fc::json::variants_from_string( os.op);
+   // auto opstring = fc::json::to_string(opvalue[1]);
+   // std::string opstring(std::begin(os.op) + 3, std::end(os.op) - 1);
+   std::string opstring(std::begin(os.op) + os.op.find_first_of("{") , std::end(os.op) - 1);
    try {
-      const auto& value = bsoncxx::from_json( alltogether );
-      col_doc.append( bsoncxx::builder::concatenate_doc{value.view()} );
-      // col_doc.append( kvp("block_id"),  );
-      // col_doc.append( kvp("block_num"),  );
-
+      // const auto& value = bsoncxx::from_json( alltogether );
+      // col_doc.append( bsoncxx::builder::concatenate_doc{value.view()} );
+      // auto opstring = fc::json::to_string(opvalue[1]);
+      col_doc.append(
+            kvp( "bulk", bsoncxx::from_json(alltogether).view() ),
+            kvp( "op", bsoncxx::from_json(opstring).view() )
+        );
    } catch(...){
       elog( "  JSON: ${j}", ("j", alltogether));
+      elog( "  JSON: ${j}", ("j", opstring ) ) ;
    }
    // catch( bsoncxx::exception& ) {
    //    try {
@@ -573,7 +594,7 @@ void mongodb_plugin::plugin_initialize(const boost::program_options::variables_m
          mongocxx::uri uri = mongocxx::uri{uri_str};
          my->db_name = uri.database();
          if( my->db_name.empty())
-            my->db_name = "cybex";
+            my->db_name = "cybexops";
          my->mongo_conn = mongocxx::client{uri};
 
          // hook up to signals on controller
