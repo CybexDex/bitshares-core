@@ -39,6 +39,7 @@ namespace graphene { namespace chain {
       asset_id_type             asset_id;
       uint32_t                  t;
       uint32_t                  u;
+      extensions_type           extensions;
 
       account_id_type   fee_payer()const { return owner; }
       void              validate()const;
@@ -56,6 +57,7 @@ namespace graphene { namespace chain {
       int64_t                   valuation;
       int64_t                   cap;
       crowdfund_id_type         crowdfund;
+      extensions_type           extensions;
       //address                   pubkey;
 
       account_id_type   fee_payer()const { return buyer; }
@@ -72,6 +74,7 @@ namespace graphene { namespace chain {
       asset                     fee;
       account_id_type           buyer;
       crowdfund_contract_id_type            crowdfund_contract;
+      extensions_type           extensions;
 
       account_id_type   fee_payer()const { return buyer; }
       void              validate()const;
@@ -81,11 +84,11 @@ namespace graphene { namespace chain {
 } } // namespace graphene::chain
 
 FC_REFLECT( graphene::chain::initiate_crowdfund_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::initiate_crowdfund_operation, (fee)(owner)(asset_id )(t)(u) )
+FC_REFLECT( graphene::chain::initiate_crowdfund_operation, (fee)(owner)(asset_id )(t)(u)(extensions) )
 FC_REFLECT( graphene::chain::participate_crowdfund_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::participate_crowdfund_operation, (fee)(buyer)(valuation)(cap)(crowdfund) )
+FC_REFLECT( graphene::chain::participate_crowdfund_operation, (fee)(buyer)(valuation)(cap)(crowdfund)(extensions) )
 FC_REFLECT( graphene::chain::withdraw_crowdfund_operation::fee_parameters_type, (fee)(price_per_kbyte) )
-FC_REFLECT( graphene::chain::withdraw_crowdfund_operation, (fee)(buyer)(crowdfund_contract) )
+FC_REFLECT( graphene::chain::withdraw_crowdfund_operation, (fee)(buyer)(crowdfund_contract)(extensions) )
 
 #define db_notify_crowdfund                             \
    void operator()( const withdraw_crowdfund_operation& op ) \
