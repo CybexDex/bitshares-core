@@ -80,6 +80,20 @@ namespace graphene { namespace chain {
       void              validate()const;
       //share_type        calculate_fee(const fee_parameters_type& k)const;
     };
+    struct fill_crowdfund_operation : public base_operation
+    {
+        struct fee_parameters_type {};
+
+        fill_crowdfund_operation() {};
+
+        crowdfund_id_type       crowdfund_id;
+        account_id_type         buyer;
+        asset                   fee;
+
+        account_id_type         fee_payer() const { return buyer; }
+        void                    validate() const { FC_ASSERT( !"virtual operation" ); }
+        share_type              calculate_fee(const fee_parameters_type& k) const { return 0; }
+    };
 
 } } // namespace graphene::chain
 
@@ -89,6 +103,8 @@ FC_REFLECT( graphene::chain::participate_crowdfund_operation::fee_parameters_typ
 FC_REFLECT( graphene::chain::participate_crowdfund_operation, (fee)(buyer)(valuation)(cap)(crowdfund)(extensions) )
 FC_REFLECT( graphene::chain::withdraw_crowdfund_operation::fee_parameters_type, (fee)(price_per_kbyte) )
 FC_REFLECT( graphene::chain::withdraw_crowdfund_operation, (fee)(buyer)(crowdfund_contract)(extensions) )
+FC_REFLECT( graphene::chain::fill_crowdfund_operation::fee_parameters_type, )
+FC_REFLECT( graphene::chain::fill_crowdfund_operation, (crowdfund_id)(buyer)(fee) )
 
 #define db_notify_crowdfund                             \
    void operator()( const withdraw_crowdfund_operation& op ) \
@@ -103,6 +119,10 @@ FC_REFLECT( graphene::chain::withdraw_crowdfund_operation, (fee)(buyer)(crowdfun
    {                                                     \
       _impacted.insert( op.owner );                      \
    }                                                     \
+   void operator()( const fill_crowdfund_operation& op ) \
+   {                                                     \
+      _impacted.insert( op.buyer );                      \
+   }
 
 #define impact_visit_crowdfund db_notify_crowdfund
 

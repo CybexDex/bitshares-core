@@ -97,6 +97,7 @@ namespace graphene { namespace chain {
             initiate_crowdfund_operation,
             participate_crowdfund_operation,
             withdraw_crowdfund_operation,
+            fill_crowdfund_operation,       // VIRTUAL
             cancel_vesting_operation,
             bid_collateral_operation,
             execute_bid_operation           // VIRTUAL
