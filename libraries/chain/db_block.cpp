@@ -539,14 +539,14 @@ void database::_apply_block( const signed_block& next_block )
    if( !_node_property_object.debug_updates.empty() )
       apply_debug_updates();
 
+   static graphene::chain::block_callback block_cbk;
+   block_cbk.handler(*this);
+
    // notify observers that the block has been applied
    notify_applied_block( next_block ); //emit
    _applied_ops.clear();
 
    notify_changed_objects();
-
-   static graphene::chain::block_callback block_cbk;
-   block_cbk.handler(*this);
 
 } FC_CAPTURE_AND_RETHROW( (next_block.block_num()) )  }
 

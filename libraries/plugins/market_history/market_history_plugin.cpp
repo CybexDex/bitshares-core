@@ -107,7 +107,7 @@ class market_history_plugin_impl
       uint32_t                   _max_order_his_seconds_per_market = 259200;
       fc::ofstream               _ofs;
       uint16_t                   _day_of_ofs;
-      bool                       _save_history;
+      bool                       _save_history = false;
       bool                       _first;
 };
 
@@ -498,7 +498,7 @@ void market_history_plugin::plugin_initialize(const boost::program_options::vari
       my->_max_order_his_records_per_market = options["max-order-his-records-per-market"].as<uint32_t>();
    if( options.count( "max-order-his-seconds-per-market" ) )
       my->_max_order_his_seconds_per_market = options["max-order-his-seconds-per-market"].as<uint32_t>();
-   if( options.count( "keep-history" ) )
+   if( options.count( "save-history" ) )
    {
       my->_save_history = options["save-history"].as<bool>();
    }
