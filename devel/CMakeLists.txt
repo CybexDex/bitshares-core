@@ -21,6 +21,7 @@ target_include_directories( cybex_wallet
                                      "${CMAKE_SOURCE_DIR}/libraries/fc/vendor/websocketpp"
                                      "${CMAKE_SOURCE_DIR}/libraries/plugins/market_history/include"
                                      "${CMAKE_SOURCE_DIR}/libraries/plugins/grouped_orders/include"
+                                     "${CMAKE_SOURCE_DIR}/libraries/plugins/limit_order_status/include"
                                      "${CMAKE_SOURCE_DIR}/libraries/plugins/debug_witness/include"
                           )
 

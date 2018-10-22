@@ -33,6 +33,7 @@
 #include <graphene/snapshot/snapshot.hpp>
 #include <graphene/es_objects/es_objects.hpp>
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
+#include <graphene/limit_order_status/limit_order_status_plugin.hpp>
 #include <cybex/query_plugin.hpp>
 #include <fc/exception/exception.hpp>
 #include <fc/thread/thread.hpp>
@@ -205,6 +206,7 @@ int main(int argc, char** argv) {
       auto es_objects_plug = node->register_plugin<es_objects::es_objects_plugin>();
       auto grouped_orders_plug = node->register_plugin<grouped_orders::grouped_orders_plugin>();
       auto query_plug = node->register_plugin<cybex::query_plugin::query_plugin>();
+      auto order_status_plug = node->register_plugin<limit_order_status::limit_order_status_plugin>();
 
       try
       {

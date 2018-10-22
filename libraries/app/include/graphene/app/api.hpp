@@ -32,6 +32,8 @@
 
 #include <graphene/grouped_orders/grouped_orders_plugin.hpp>
 
+#include <graphene/limit_order_status/limit_order_status_plugin.hpp>
+
 #include <graphene/debug_witness/debug_api.hpp>
 
 #include <graphene/net/node.hpp>
@@ -52,6 +54,7 @@ namespace graphene { namespace app {
    using namespace graphene::chain;
    using namespace graphene::market_history;
    using namespace graphene::grouped_orders;
+   using namespace graphene::limit_order_status;
    using namespace fc::ecc;
    using namespace std;
 
@@ -392,6 +395,44 @@ namespace graphene { namespace app {
          application& _app;
    };
 
+   /*
+    * @bried the order_status_api class exposes access to data processed with limit order status plugin
+    */
+   class limit_order_status_api
+   {
+      public:
+         limit_order_status_api(application& app):_db(*app.chain_database()){}
+
+         vector< limit_order_status_object > get_limit_order_status(
+            account_id_type account_id,
+            limit_order_id_type start,
+            uint32_t limit) const ;
+
+         vector< limit_order_status_object > get_market_limit_order_status(
+            account_id_type account_id,
+            asset_id_type asset_id1,
+            asset_id_type asset_id2,
+            limit_order_id_type start,
+            uint32_t limit) const ;
+
+         vector< limit_order_status_object > get_opened_limit_order_status(
+            account_id_type account_id
+            ) const ;
+
+         vector< limit_order_status_object > get_opened_market_limit_order_status(
+            account_id_type account_id,
+            asset_id_type asset_id1,
+            asset_id_type asset_id2
+            ) const ;
+
+         limit_order_id_type get_limit_order_id_by_time(
+            fc::time_point_sec time
+            ) const;
+
+      private:
+         const graphene::chain::database& _db;
+   };
+
    /**
     * @brief The login_api class implements the bottom layer of the RPC API
     *
@@ -429,6 +470,8 @@ namespace graphene { namespace app {
          fc::api<asset_api> asset()const;
          /// @brief Retrieve the orders API
          fc::api<orders_api> orders()const;
+         /// @brief Retrieve the limit order status API
+         fc::api<limit_order_status_api> limit_order_status()const;
          /// @brief Retrieve the debug API (if available)
          fc::api<graphene::debug_witness::debug_api> debug()const;
 
@@ -445,6 +488,7 @@ namespace graphene { namespace app {
          optional< fc::api<crypto_api> > _crypto_api;
          optional< fc::api<asset_api> > _asset_api;
          optional< fc::api<orders_api> > _orders_api;
+         optional< fc::api<limit_order_status_api> > _limit_order_status_api;
          optional< fc::api<graphene::debug_witness::debug_api> > _debug_api;
    };
 
@@ -512,6 +556,13 @@ FC_API(graphene::app::orders_api,
        (get_tracked_groups)
        (get_grouped_limit_orders)
      )
+FC_API(graphene::app::limit_order_status_api,
+       (get_limit_order_status)
+       (get_market_limit_order_status)
+       (get_opened_limit_order_status)
+       (get_opened_market_limit_order_status)
+       (get_limit_order_id_by_time)
+     )
 FC_API(graphene::app::login_api,
        (login)
        (block)
@@ -522,5 +573,6 @@ FC_API(graphene::app::login_api,
        (crypto)
        (asset)
        (orders)
+       (limit_order_status)
        (debug)
      )

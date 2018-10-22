@@ -108,6 +108,10 @@ namespace graphene { namespace app {
        {
           _orders_api = std::make_shared< orders_api >( std::ref( _app ) );
        }
+       else if( api_name == "limit_order_status_api" )
+       {
+          _limit_order_status_api = std::make_shared< limit_order_status_api >( std::ref(_app) );
+       }
        else if( api_name == "debug_api" )
        {
           // can only enable this API if the plugin was loaded
@@ -280,6 +284,12 @@ namespace graphene { namespace app {
     {
        FC_ASSERT(_orders_api);
        return *_orders_api;
+    }
+
+    fc::api<limit_order_status_api> login_api::limit_order_status() const
+    {
+       FC_ASSERT(_limit_order_status_api);
+       return *_limit_order_status_api;
     }
 
     fc::api<graphene::debug_witness::debug_api> login_api::debug() const
@@ -644,4 +654,120 @@ namespace graphene { namespace app {
       return result;
    }
 
+   vector< limit_order_status_object > limit_order_status_api::get_limit_order_status(
+            account_id_type account_id,
+            limit_order_id_type start,
+            uint32_t limit
+            ) const
+   {
+      FC_ASSERT( limit <= 100 );
+      
+      vector< limit_order_status_object > result;
+
+      if( start == limit_order_id_type() )
+         start = _db.get_index_type<limit_order_index>().get_next_id();
+
+      auto& by_seller_idx = _db.get_index_type<limit_order_status_index>().indices().get<by_seller>();
+
+      auto itr = by_seller_idx.lower_bound(boost::make_tuple(account_id, false, start));
+      while( itr != by_seller_idx.end() && result.size() < limit && itr->seller == account_id && !itr->is_opened())
+      {
+         result.push_back(*itr);
+         itr++;
+      }
+
+      return result;
+   }
+
+   vector< limit_order_status_object > limit_order_status_api::get_market_limit_order_status(
+            account_id_type account_id,
+            asset_id_type asset_id1,
+            asset_id_type asset_id2,
+            limit_order_id_type start,
+            uint32_t limit
+            ) const
+   {
+      FC_ASSERT( limit <= 100 );
+      FC_ASSERT( asset_id1 != asset_id2 );
+
+      vector< limit_order_status_object > result;
+
+      if( start == limit_order_id_type() )
+         start = _db.get_index_type<limit_order_index>().get_next_id();
+
+      auto& by_status_key_idx = _db.get_index_type<limit_order_status_index>().indices().get<by_status_key>();
+      if( asset_id1 > asset_id2 )
+         std::swap(asset_id1, asset_id2);
+
+      status_key key(asset_id1, asset_id2);
+     
+      auto itr = by_status_key_idx.lower_bound(boost::make_tuple(account_id, key, false, start));
+      while( itr != by_status_key_idx.end() && result.size() < limit &&
+             itr->key.asset1 == asset_id1 && itr->key.asset2 == asset_id2 && !itr->is_opened() && itr->seller == account_id)
+      {
+         result.push_back(*itr);
+         itr++;
+      }
+      return result;
+   }
+
+   vector< limit_order_status_object > limit_order_status_api::get_opened_limit_order_status(
+            account_id_type account_id
+            ) const
+   {
+      vector< limit_order_status_object > result;
+
+      limit_order_id_type start = _db.get_index_type<limit_order_index>().get_next_id();
+
+      auto& by_seller_idx = _db.get_index_type<limit_order_status_index>().indices().get<by_seller>();
+
+      auto itr = by_seller_idx.lower_bound(boost::make_tuple(account_id, true, start));
+      while( itr != by_seller_idx.end() && itr->seller == account_id && itr->is_opened() )
+      {
+         result.push_back(*itr);
+         itr++;
+      }
+
+      return result;
+   }
+
+   vector< limit_order_status_object > limit_order_status_api::get_opened_market_limit_order_status(
+            account_id_type account_id,
+            asset_id_type asset_id1,
+            asset_id_type asset_id2
+            ) const
+   {
+      vector< limit_order_status_object > result;
+
+      auto& by_status_key_idx = _db.get_index_type<limit_order_status_index>().indices().get<by_status_key>();
+      if( asset_id1 > asset_id2 )
+         std::swap(asset_id1, asset_id2);
+
+      status_key key(asset_id1, asset_id2);
+      limit_order_id_type start = _db.get_index_type<limit_order_index>().get_next_id();
+
+      auto itr = by_status_key_idx.lower_bound(boost::make_tuple(account_id, key, true, start));
+      while( itr != by_status_key_idx.end() && itr->key.asset1 == asset_id1 && itr->key.asset2 == asset_id2
+             && itr->seller == account_id && itr->is_opened() )
+      {
+         result.push_back(*itr);
+         itr++;
+      }
+
+      return result;
+   }
+
+   limit_order_id_type limit_order_status_api::get_limit_order_id_by_time(
+          fc::time_point_sec time
+          ) const
+   {
+      limit_order_id_type order_id;
+      auto& by_open_time_idx = _db.get_index_type<limit_order_status_index>().indices().get<by_open_time>();
+      auto itr = by_open_time_idx.upper_bound(boost::make_tuple(time));
+      auto itr_stop = by_open_time_idx.lower_bound(boost::make_tuple(fc::time_point_sec::min()));
+      itr--;
+      FC_ASSERT(itr != itr_stop, "Empty order status");
+      return itr->order_id;
+         
+   }
 } } // graphene::app
