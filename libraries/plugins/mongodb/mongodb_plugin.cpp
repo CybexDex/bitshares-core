@@ -68,6 +68,8 @@
 #include <mongocxx/instance.hpp>
 #include <mongocxx/exception/operation_exception.hpp>
 #include <mongocxx/exception/logic_error.hpp>
+#include <mongocxx/collection.hpp>
+
 
 namespace graphene { namespace mongodb {
 
@@ -108,6 +110,7 @@ class mongodb_plugin_impl
 
       bool configured{false};
       bool wipe_database_on_startup{false};
+      bool reset_mongo_index{false};
       bool clear_database_on_startup{false};
       uint32_t start_block_num = 0;
       bool start_block_reached = false;
@@ -257,21 +260,31 @@ void mongodb_plugin_impl::init() {
       // blocks indexes
       auto account_history = mongo_conn[db_name]["account_history"]; // Blocks
       // account_history.create_index( bsoncxx::from_json( R"xxx({ "account_history.id" : 1 })xxx" ));
-      if(wipe_database_on_startup == true){
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_num" : 1 })xxx" ));
+      if(reset_mongo_index == true){
+      	
+        account_history.indexes().drop_all();
+      }
+      if(wipe_database_on_startup == true || reset_mongo_index == true){
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_num" : -1 })xxx" ));
         account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.operation_id" : 1 })xxx" ));
         account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.trx_id" : 1 })xxx" ));
         account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.operation_type" : 1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_num": -1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.operation_type": 1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fee.asset_id" : 1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.amount.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.amount_to_sell.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.min_to_receive.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.pays.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
-        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.receives.asset_id" : 1, "bulk.block_data.block_num": -1 })xxx" ));
         account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.operation_type": 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fee.asset_id" : 1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.amount.asset_id" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.amount_to_sell.asset_id" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.min_to_receive.asset_id" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.pays.asset_id" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.receives.asset_id" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.fill_price.base.asset_id" : 1, "op.fill_price.quote.asset_id" : 1,"bulk.block_data.block_time": -1 },{"name":"fill_order_idx_1"})xxx" ));
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "op.fill_price.quote.asset_id" : 1,"bulk.block_data.block_time": -1 },{"name":"fill_order_idx_2"})xxx" ));
+
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "op.seller" : 1, "result.1": 1 })xxx" )); // create limit order, op1
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order" : 1 })xxx" ));// cancel order, op2 
+        account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" )); // fill order, op4
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_time": -1 })xxx" ));
         // account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" ));
         // account_history.create_index( bsoncxx::from_json( R"xxx({ "block_id" : 1 })xxx" ));
       }
@@ -411,7 +424,7 @@ void mongodb_plugin_impl::add_mongodb( const account_id_type account_id, const o
    //    limit_documents = _mongodb_bulk_sync;
    // else
    //    limit_documents = _mongodb_bulk_replay;
-   if(!wipe_database_on_startup && start_block_num > bs.block_num){
+   if(!wipe_database_on_startup && (int)start_block_num > bs.block_num){
       // ilog("Now processBulkLine is disabled!");
    }else {
       processBulkLine(ath, os, op_type, bs, vs); // we have everything, creating bulk line
@@ -457,6 +470,7 @@ void mongodb_plugin_impl::processBulkLine(account_transaction_history_object ath
    // bulks.additional_data = vs;
 
    std::string alltogether = fc::json::to_string(bulks);
+   // std::string op_result= os.operation_result;
 
    // auto block_date = bulks.block_data.block_time.to_iso_string();
    // std::vector<std::string> parts;
@@ -482,11 +496,13 @@ void mongodb_plugin_impl::processBulkLine(account_transaction_history_object ath
       // auto opstring = fc::json::to_string(opvalue[1]);
       col_doc.append(
             kvp( "bulk", bsoncxx::from_json(alltogether).view() ),
-            kvp( "op", bsoncxx::from_json(opstring).view() )
+            kvp( "op", bsoncxx::from_json(opstring).view() ),
+            kvp( "result", bsoncxx::from_json(os.operation_result).view() )
         );
    } catch(...){
       elog( "  JSON: ${j}", ("j", alltogether));
       elog( "  JSON: ${j}", ("j", opstring ) ) ;
+      handle_mongo_exception("error when construct : " + opstring , __LINE__);
    }
    // catch( bsoncxx::exception& ) {
    //    try {
@@ -506,7 +522,7 @@ void mongodb_plugin_impl::processBulkLine(account_transaction_history_object ath
          ilog( "Failed to insert ${"+ _id + "}");
       }
    } catch(...) {
-      handle_mongo_exception("col insert: " + alltogether, __LINE__);
+      handle_mongo_exception("col insert: " + opstring , __LINE__);
    }
 
    // bulk header before each line, op_type = create to avoid dups, index id will be ath id(2.9.X).
@@ -542,7 +558,9 @@ void mongodb_plugin::plugin_set_program_options(
    cli.add_options()
          ("mongodb-queue-size,q", bpo::value<uint32_t>()->default_value(256),
          "The target queue size between nodeos and MongoDB plugin thread.")
-         ("mongodb-wipe", bpo::bool_switch()->default_value(false),
+         ("reset-mongodb-index", bpo::bool_switch()->default_value(false),
+         "Reset mongo indexes, drop then create new indexes.")
+	 ("mongodb-wipe", bpo::bool_switch()->default_value(false),
          "Required with --replay-blockchain, --resync-blockchain to wipe mongo db."
          "This option required to prevent accidental wipe of mongo db.")
          ("mongodb-block-start", bpo::value<uint32_t>()->default_value(0),
@@ -575,7 +593,10 @@ void mongodb_plugin::plugin_initialize(const boost::program_options::variables_m
                ilog( "--mongodb-wipe required with --replay-blockchain, --resync-blockchain. --mongodb-wipe will remove all cybex collections from mongodb." );
             }
          }
-
+	 if( options.count("reset-mongodb-index")  && options.at( "reset-mongodb-index" ).as<bool>() ){
+		ilog("Reseting mongo index");
+		my->reset_mongo_index = true;
+	 }
          if( options.count( "mongodb-queue-size" )) {
             my->queue_size = options.at( "mongodb-queue-size" ).as<uint32_t>();
          }
