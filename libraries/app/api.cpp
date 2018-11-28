@@ -765,9 +765,11 @@ namespace graphene { namespace app {
       auto& by_open_time_idx = _db.get_index_type<limit_order_status_index>().indices().get<by_open_time>();
       auto itr = by_open_time_idx.upper_bound(boost::make_tuple(time));
       auto itr_stop = by_open_time_idx.lower_bound(boost::make_tuple(fc::time_point_sec::min()));
+      if(itr == itr_stop)
+          return limit_order_id_type();
       itr--;
-      FC_ASSERT(itr != itr_stop, "Empty order status");
+      if(itr == itr_stop)
+          return limit_order_id_type();
       return itr->order_id;
-         
    }
 } } // graphene::app
