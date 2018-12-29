@@ -1062,6 +1062,11 @@ void application::initialize(const fc::path& data_dir, const boost::program_opti
          ++es_ah_conflict_counter;
       if(it == "elasticsearch")
          ++es_ah_conflict_counter;
+      if(it == "zmq_history")
+         ++es_ah_conflict_counter;
+      if(it == "mongodb")
+         ++es_ah_conflict_counter;
+  
 
       if(es_ah_conflict_counter > 1) {
          elog("Can't start program with elasticsearch and account_history plugin at the same time");

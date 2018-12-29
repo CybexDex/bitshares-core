@@ -25,6 +25,9 @@
 
 #include <graphene/delayed_node/delayed_node_plugin.hpp>
 #include <graphene/account_history/account_history_plugin.hpp>
+#include <graphene/zmq_history/zmq_history_plugin.hpp>
+#include <graphene/mongodb/mongodb_plugin.hpp>
+#include <graphene/zmq_objects/zmq_objects.hpp>
 #include <graphene/market_history/market_history_plugin.hpp>
 
 #include <fc/exception/exception.hpp>
@@ -72,6 +75,9 @@ int main(int argc, char** argv) {
 
       auto delayed_plug = node.register_plugin<delayed_node::delayed_node_plugin>();
       auto history_plug = node.register_plugin<account_history::account_history_plugin>();
+      auto zmq_history_plug = node.register_plugin<zmq_history::zmq_history_plugin>();
+      auto mongodb_plug = node.register_plugin<mongodb::mongodb_plugin>();
+      auto zmq_objects_plug = node.register_plugin<zmq_objects::zmq_objects_plugin>();
       auto market_history_plug = node.register_plugin<market_history::market_history_plugin>();
 
       try

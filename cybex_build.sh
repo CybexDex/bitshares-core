@@ -23,13 +23,13 @@ opt=""
 
 if [ $# -gt 0 ] && [ "$1" == "dbg" ];
 then
-    opt="$opt -DCMAKE_BUILD_TYPE=Debug"
+    opt="$opt -DCMAKE_BUILD_TYPE=RelWithDebInfo"
 fi
 
 VERSION=1.2
 ULIMIT=$( ulimit -u )
 WORK_DIR=$PWD
-BUILD_DIR=${WORK_DIR}/build
+BUILD_DIR=${WORK_DIR}/build_test
 ARCH=$( uname -s )
 
 

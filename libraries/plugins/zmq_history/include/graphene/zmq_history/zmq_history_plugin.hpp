@@ -27,7 +27,7 @@
 #include <graphene/chain/database.hpp>
 #include <graphene/chain/operation_history_object.hpp>
 
-namespace graphene { namespace mongodb {
+namespace graphene { namespace zmq_history {
    using namespace chain;
    //using namespace graphene::db;
    //using boost::multi_index_container;
@@ -47,17 +47,16 @@ namespace graphene { namespace mongodb {
 #define MONGODB_SPACE_ID 6
 #endif
 
-
 namespace detail
 {
-    class mongodb_plugin_impl;
+    class zmq_history_plugin_impl;
 }
 
-class mongodb_plugin : public graphene::app::plugin
+class zmq_history_plugin : public graphene::app::plugin
 {
    public:
-      mongodb_plugin();
-      virtual ~mongodb_plugin();
+      zmq_history_plugin();
+      virtual ~zmq_history_plugin();
 
       std::string plugin_name()const override;
       std::string plugin_description()const override;
@@ -67,8 +66,8 @@ class mongodb_plugin : public graphene::app::plugin
       virtual void plugin_initialize(const boost::program_options::variables_map& options) override;
       virtual void plugin_startup() override;
 
-      friend class detail::mongodb_plugin_impl;
-      std::unique_ptr<detail::mongodb_plugin_impl> my;
+      friend class detail::zmq_history_plugin_impl;
+      std::unique_ptr<detail::zmq_history_plugin_impl> my;
 };
 
 
@@ -141,15 +140,21 @@ struct bulk_struct {
    // visitor_struct additional_data;
 };
 
+struct pub_obj_struct {
+   bulk_struct bulk;
+   std::string op;
+   std::string result;
+};
 
-} } //graphene::mongodb
 
-FC_REFLECT( graphene::mongodb::operation_history_struct, (trx_in_block)(op_in_trx)(operation_result)(virtual_op)(op) )
-FC_REFLECT( graphene::mongodb::block_struct, (block_num)(block_time)(trx_id) )
-FC_REFLECT( graphene::mongodb::fee_struct, (asset)(amount) )
-FC_REFLECT( graphene::mongodb::transfer_struct, (asset)(amount)(from)(to) )
-FC_REFLECT( graphene::mongodb::visitor_struct, (fee_data)(transfer_data) )
-// FC_REFLECT( graphene::mongodb::bulk_struct, (account_history)(operation_history)(operation_type)(block_data)(additional_data) )
-FC_REFLECT( graphene::mongodb::bulk_struct, (account_history)(operation_type)(block_data) )
+} } //graphene::zmq_history
+
+FC_REFLECT( graphene::zmq_history::operation_history_struct, (trx_in_block)(op_in_trx)(operation_result)(virtual_op)(op) )
+FC_REFLECT( graphene::zmq_history::block_struct, (block_num)(block_time)(trx_id) )
+FC_REFLECT( graphene::zmq_history::fee_struct, (asset)(amount) )
+FC_REFLECT( graphene::zmq_history::transfer_struct, (asset)(amount)(from)(to) )
+FC_REFLECT( graphene::zmq_history::visitor_struct, (fee_data)(transfer_data) )
+FC_REFLECT( graphene::zmq_history::bulk_struct, (account_history)(operation_type)(block_data) )
+FC_REFLECT( graphene::zmq_history::pub_obj_struct, (bulk)(op)(result) )
 
 

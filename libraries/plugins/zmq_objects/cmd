@@ -1,0 +1,2 @@
+./delayed_node -d data/ --plugins "delayed_node zmq_objects" --trusted-node 47.75.154.39:8080 --genesis-json genesis.json --zmq-objects-balances=1 --zmq-objects-accounts=1  --zmq-objects-bulk-replay=1 --zmq-objects-bulk-sync=1 --zmq-objects-zmq-addr tcp://*:8084 > log2.log 2>&1 &
+
