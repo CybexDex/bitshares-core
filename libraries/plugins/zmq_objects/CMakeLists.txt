@@ -1,5 +1,11 @@
 file(GLOB HEADERS "include/graphene/zmq_objects/*.hpp")
 SET( ZeroMQ_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu/" )
+SET( ZeroMQ_INCLUDE_DIRS "/usr/include/" )
+
+find_path(ZeroMQ_INCLUDE_DIR
+        NAMES zmq.hpp
+        PATHS ${ZeroMQ_INCLUDE_DIRS}
+        )
 
 find_library(ZeroMQ_LIBRARY
              NAMES zmq
