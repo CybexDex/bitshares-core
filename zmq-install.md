@@ -4,6 +4,8 @@ Before installing, make sure you have installed all the needed packages
 sudo apt-get install libtool pkg-config build-essential autoconf automake
 sudo apt-get install libzmq-dev
 ```
+
+# How to source code install 
 ## Install libsodium
 ```
 git clone git://github.com/jedisct1/libsodium.git
@@ -24,3 +26,13 @@ cd zeromq-4.1.2
 sudo make install
 sudo ldconfig
 ```
+
+# Other Notes
+
+When build zmq-related plugins, maybe you need to edit libraries/plugins/zmq_objects/CMakeLists.txt, please use 
+```
+whereis zmq
+
+whereis libzmq.a
+```
+to locate ZeroMQ_LIBRARY_DIRS and ZeroMQ_INCLUDE_DIRS, before cmake remeber reset both the DIRs.

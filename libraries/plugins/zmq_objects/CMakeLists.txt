@@ -17,7 +17,7 @@ add_library( graphene_zmq_objects
            )
 
 target_link_libraries( graphene_zmq_objects graphene_chain graphene_app curl zmq)
-target_include_directories( graphene_zmq_objects PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" )
+target_include_directories( graphene_zmq_objects PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include" ${ZeroMQ_INCLUDE_DIR} )
 
 if(MSVC)
   set_source_files_properties(zmq_objects.cpp PROPERTIES COMPILE_FLAGS "/bigobj" )
