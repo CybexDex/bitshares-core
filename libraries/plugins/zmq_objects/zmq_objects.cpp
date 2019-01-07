@@ -69,6 +69,7 @@ class zmq_objects_plugin_impl
       bool _zmq_objects_accounts = false;
       bool _zmq_objects_assets = false;
       bool _zmq_objects_balances = false;
+      bool _zmq_objects_accbalances = false;
       bool _zmq_objects_limit_orders = false;
       bool _zmq_objects_asset_bitasset = false;
       bool _zmq_objects_logs = true;
@@ -79,6 +80,7 @@ class zmq_objects_plugin_impl
       map<object_id_type, proposal_struct> proposals;
       map<object_id_type, asset_struct> assets;
       map<object_id_type, balance_struct> balances;
+      map<object_id_type, balance_struct> accbalances;
       map<object_id_type, limit_order_struct> limit_orders;
       //uint32_t bitasset_seq;
    private:
@@ -86,6 +88,7 @@ class zmq_objects_plugin_impl
       void PrepareAccount(const account_object* account_object, const fc::time_point_sec block_time, uint32_t block_number);
       void PrepareAsset(const asset_object* asset_object, const fc::time_point_sec block_time, uint32_t block_number);
       void PrepareBalance(const balance_object* balance_object, const fc::time_point_sec block_time, uint32_t block_number);
+      void PrepareAccountBalance(const account_balance_object* accbalance_object, const fc::time_point_sec block_time, uint32_t block_number);
       void PrepareLimit(const limit_order_object* limit_object, const fc::time_point_sec block_time, uint32_t block_number);
       void PrepareBitAsset(const asset_bitasset_data_object* bitasset_object, const fc::time_point_sec block_time, uint32_t block_number);
 };
@@ -132,6 +135,13 @@ void zmq_objects_plugin_impl::updateDatabase( const vector<object_id_type>& ids 
          auto a = static_cast<const asset_object*>(obj);
          if(a != nullptr)
             PrepareAsset(a, block_time, block_number);
+      }
+      else if(value.is<account_balance_object>() && _zmq_objects_accbalances) {
+	// ilog("account_balance_object");
+         auto obj = db.find_object(value);
+         auto b = static_cast<const account_balance_object*>(obj);
+         if(b != nullptr)
+            PrepareAccountBalance(b, block_time, block_number);
       }
       else if(value.is<balance_object>() && _zmq_objects_balances) {
 	ilog("balance_object");
@@ -239,6 +249,29 @@ void zmq_objects_plugin_impl::PrepareAsset(const asset_object* asset_object, con
    std::string data = "bitsharzmq-asset " + fc::json::to_string(_asset);
    bulk.push_back(data);
 }
+
+void zmq_objects_plugin_impl::PrepareAccountBalance(const account_balance_object* account_balance_object, const fc::time_point_sec block_time, uint32_t block_number)
+{
+   balance_struct balance;
+   balance.object_id = account_balance_object->id;
+   balance.block_time = block_time;
+   balance.block_number = block_number;
+   balance.account= account_balance_object->owner;
+   balance.asset_id = account_balance_object->asset_type;
+   balance.amount = account_balance_object->balance;
+
+   auto it = accbalances.find(account_balance_object->id);
+   if(it == accbalances.end())
+      accbalances[account_balance_object->id] = balance;
+   else {
+      if(it->second == balance) return;
+      else accbalances[account_balance_object->id] = balance;
+   }
+
+   std::string data = "bitsharzmq-accbalance " + fc::json::to_string(balance);
+   bulk.push_back(data);
+}
+
 
 void zmq_objects_plugin_impl::PrepareBalance(const balance_object* balance_object, const fc::time_point_sec block_time, uint32_t block_number)
 {
@@ -355,9 +388,9 @@ void zmq_objects_plugin::plugin_set_program_options(
          ("zmq-objects-accounts", boost::program_options::value<bool>(), "Store account objects")
          ("zmq-objects-assets", boost::program_options::value<bool>(), "Store asset objects")
          ("zmq-objects-balances", boost::program_options::value<bool>(), "Store balances objects")
+         ("zmq-objects-accbalances", boost::program_options::value<bool>(), "Store account balances objects")
          ("zmq-objects-limit-orders", boost::program_options::value<bool>(), "Store limit order objects")
          ("zmq-objects-asset-bitasset", boost::program_options::value<bool>(), "Store feed data")
-
          ;
    cfg.add(cli);
 }
@@ -395,6 +428,10 @@ void zmq_objects_plugin::plugin_initialize(const boost::program_options::variabl
 	ilog("enable balances!");
       my->_zmq_objects_balances = options["zmq-objects-balances"].as<bool>();
    }
+   if (options.count("zmq-objects-accbalances")) {
+	ilog("enable acc-balances!");
+      my->_zmq_objects_accbalances = options["zmq-objects-accbalances"].as<bool>();
+   }
    if (options.count("zmq-objects-limit-orders")) {
 	ilog("enable limit-orders!");
       my->_zmq_objects_limit_orders = options["zmq-objects-limit-orders"].as<bool>();
@@ -403,7 +440,7 @@ void zmq_objects_plugin::plugin_initialize(const boost::program_options::variabl
 	ilog("enable asset-bitasset!");
       my->_zmq_objects_asset_bitasset = options["zmq-objects-asset-bitasset"].as<bool>();
    }
-   if( !(my->_zmq_objects_proposals || my->_zmq_objects_accounts || my->_zmq_objects_assets || my->_zmq_objects_balances || my->_zmq_objects_limit_orders) ){
+   if( !(my->_zmq_objects_proposals || my->_zmq_objects_accounts || my->_zmq_objects_assets || my->_zmq_objects_accbalances || my->_zmq_objects_balances || my->_zmq_objects_limit_orders) ){
 	elog("no objects enabled!");
 	std::exit(EXIT_FAILURE);
    }
