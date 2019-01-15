@@ -97,12 +97,6 @@ class mongodb_plugin_impl
       mongodb_plugin& _self;
       primary_index< operation_history_index >* _oho_index;
 
-      // std::string _mongodb_node_url = "http://localhost:9200/";
-      // uint32_t _mongodb_bulk_replay = 10000;
-      // uint32_t _mongodb_bulk_sync = 100;
-      // bool _mongodb_logs = true;
-      // bool _mongodb_visitor = false;
-      // CURL *curl; // curl handler
       vector <string> bulk; //  vector of op lines
       void init();
       void clear_database_since(uint32_t clear_num);
@@ -250,11 +244,6 @@ void mongodb_plugin_impl::wipe_database() {
 }
 
 void mongodb_plugin_impl::init() {
-   // using namespace bsoncxx::types;
-   // using bsoncxx::builder::basic::make_document;
-   // using bsoncxx::builder::basic::kvp;
-   // Create the native contract accounts manually; sadly, we can't run their contracts to make them create themselves
-   // See native_contract_chain_initializer::prepare_database()
 
    try {
       // blocks indexes
@@ -284,9 +273,11 @@ void mongodb_plugin_impl::init() {
         account_history.create_index( bsoncxx::from_json( R"xxx({ "op.seller" : 1, "result.1": 1 })xxx" )); // create limit order, op1
         account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order" : 1 })xxx" ));// cancel order, op2 
         account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" )); // fill order, op4
-        // account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_time": -1 })xxx" ));
-        // account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" ));
-        // account_history.create_index( bsoncxx::from_json( R"xxx({ "block_id" : 1 })xxx" ));
+	account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_time": 1 })xxx" )); 
+	account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fill_price.base.asset_id": 1, "op.fill_price.quote.asset_id": 1 })xxx" )); 
+	account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fill_price.base.asset_id": 1, "op.fill_price.quote.asset_id": 1, "bulk.block_data.block_time": -1 })xxx" )); 
+	account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_time": -1, "bulk.operation_type": 1 })xxx" )); 
+	
       }
    } catch(...) {
       handle_mongo_exception("create indexes", __LINE__);

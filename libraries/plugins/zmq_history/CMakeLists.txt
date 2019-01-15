@@ -2,10 +2,9 @@ file(GLOB HEADERS "include/graphene/zmq_history/*.hpp")
 SET( ZeroMQ_LIBRARY_DIRS "/usr/lib/x86_64-linux-gnu/" )
 
 find_library(ZeroMQ_LIBRARY
-             NAMES zmq
+             NAMES zmq.a
              PATHS ${ZeroMQ_LIBRARY_DIRS}
              )
-
 add_library( graphene_zmq_history
         zmq_history_plugin.cpp
            )

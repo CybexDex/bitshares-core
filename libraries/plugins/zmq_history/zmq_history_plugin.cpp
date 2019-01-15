@@ -385,7 +385,7 @@ void zmq_history_plugin::plugin_set_program_options(
          "The target queue size between nodeos and MongoDB plugin thread.")
          ("zmq_history-block-start", bpo::value<uint32_t>()->default_value(0),
          "If specified then only abi data pushed to zmq_history until specified block is reached.")
-         ("zmq_history-addr,m", bpo::value<std::string>(),
+         ("zmq_history-addr", bpo::value<std::string>(),
          "MongoDB URI connection string, see: https://docs.zmq_history.com/master/reference/connection-string/."
                " If not specified then plugin is disabled. Default database 'cybex' is used if not specified in URI."
                " Example: zmq_history://127.0.0.1:27017/cybex")

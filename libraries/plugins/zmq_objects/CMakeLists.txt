@@ -8,7 +8,7 @@ find_path(ZeroMQ_INCLUDE_DIR
         )
 
 find_library(ZeroMQ_LIBRARY
-             NAMES zmq
+             NAMES zmq.a
              PATHS ${ZeroMQ_LIBRARY_DIRS}
              )
 
