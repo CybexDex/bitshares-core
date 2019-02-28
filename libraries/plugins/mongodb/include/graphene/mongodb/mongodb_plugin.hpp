@@ -135,12 +135,14 @@ struct visitor_struct {
 
 struct bulk_struct {
    account_transaction_history_object account_history;
-   // operation_history_struct operation_history;
+//    operation_history_struct operation_history;
    int operation_type;
    block_struct block_data;
-   // visitor_struct additional_data;
+//   visitor_struct additional_data;
 };
-
+struct op4_ext {
+   std::string	pair;
+};
 
 } } //graphene::mongodb
 
@@ -151,5 +153,6 @@ FC_REFLECT( graphene::mongodb::transfer_struct, (asset)(amount)(from)(to) )
 FC_REFLECT( graphene::mongodb::visitor_struct, (fee_data)(transfer_data) )
 // FC_REFLECT( graphene::mongodb::bulk_struct, (account_history)(operation_history)(operation_type)(block_data)(additional_data) )
 FC_REFLECT( graphene::mongodb::bulk_struct, (account_history)(operation_type)(block_data) )
+FC_REFLECT( graphene::mongodb::op4_ext, (pair) )
 
 

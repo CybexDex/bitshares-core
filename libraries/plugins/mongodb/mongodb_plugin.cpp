@@ -97,6 +97,12 @@ class mongodb_plugin_impl
       mongodb_plugin& _self;
       primary_index< operation_history_index >* _oho_index;
 
+      // std::string _mongodb_node_url = "http://localhost:9200/";
+      // uint32_t _mongodb_bulk_replay = 10000;
+      // uint32_t _mongodb_bulk_sync = 100;
+      // bool _mongodb_logs = true;
+      // bool _mongodb_visitor = false;
+      // CURL *curl; // curl handler
       vector <string> bulk; //  vector of op lines
       void init();
       void clear_database_since(uint32_t clear_num);
@@ -244,6 +250,11 @@ void mongodb_plugin_impl::wipe_database() {
 }
 
 void mongodb_plugin_impl::init() {
+   // using namespace bsoncxx::types;
+   // using bsoncxx::builder::basic::make_document;
+   // using bsoncxx::builder::basic::kvp;
+   // Create the native contract accounts manually; sadly, we can't run their contracts to make them create themselves
+   // See native_contract_chain_initializer::prepare_database()
 
    try {
       // blocks indexes
@@ -273,11 +284,9 @@ void mongodb_plugin_impl::init() {
         account_history.create_index( bsoncxx::from_json( R"xxx({ "op.seller" : 1, "result.1": 1 })xxx" )); // create limit order, op1
         account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order" : 1 })xxx" ));// cancel order, op2 
         account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" )); // fill order, op4
-	account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_time": 1 })xxx" )); 
-	account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fill_price.base.asset_id": 1, "op.fill_price.quote.asset_id": 1 })xxx" )); 
-	account_history.create_index( bsoncxx::from_json( R"xxx({ "op.fill_price.base.asset_id": 1, "op.fill_price.quote.asset_id": 1, "bulk.block_data.block_time": -1 })xxx" )); 
-	account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.block_data.block_time": -1, "bulk.operation_type": 1 })xxx" )); 
-	
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "bulk.account_history.account" : 1, "bulk.block_data.block_time": -1 })xxx" ));
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "op.order_id" : 1 })xxx" ));
+        // account_history.create_index( bsoncxx::from_json( R"xxx({ "block_id" : 1 })xxx" ));
       }
    } catch(...) {
       handle_mongo_exception("create indexes", __LINE__);
@@ -381,7 +390,18 @@ void mongodb_plugin_impl::add_mongodb( const account_id_type account_id, const o
    operation_history_struct os;
    os.trx_in_block = oho->trx_in_block;
    os.op_in_trx = oho->op_in_trx;
-   os.operation_result = fc::json::to_string(oho->result);
+   if(op_type == 4){
+	auto op4 = oho->op.get<fill_order_operation>();
+	auto quote_ = op4.fill_price.quote.asset_id;
+	auto base_ = op4.fill_price.base.asset_id;
+	auto pair_ = fc::json::to_string(quote_) + "_" + fc::json::to_string(base_);
+	pair_.erase(std::remove(pair_.begin(), pair_.end(), '"'), pair_.end());
+	op4_ext _ext;
+	_ext.pair = pair_;
+   	os.operation_result = fc::json::to_string(_ext);
+   }else{
+    	os.operation_result = fc::json::to_string(oho->result);
+   }
    os.virtual_op = oho->virtual_op;
    os.op = fc::json::to_string(oho->op);
 
@@ -485,11 +505,12 @@ void mongodb_plugin_impl::processBulkLine(account_transaction_history_object ath
       // const auto& value = bsoncxx::from_json( alltogether );
       // col_doc.append( bsoncxx::builder::concatenate_doc{value.view()} );
       // auto opstring = fc::json::to_string(opvalue[1]);
-      col_doc.append(
-            kvp( "bulk", bsoncxx::from_json(alltogether).view() ),
-            kvp( "op", bsoncxx::from_json(opstring).view() ),
-            kvp( "result", bsoncxx::from_json(os.operation_result).view() )
-        );
+  
+      	    col_doc.append(
+            	kvp( "bulk", bsoncxx::from_json(alltogether).view() ),
+            	kvp( "op", bsoncxx::from_json(opstring).view() ),
+            	kvp( "result", bsoncxx::from_json(os.operation_result).view() )
+            );
    } catch(...){
       elog( "  JSON: ${j}", ("j", alltogether));
       elog( "  JSON: ${j}", ("j", opstring ) ) ;
